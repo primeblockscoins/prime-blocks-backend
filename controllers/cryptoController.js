@@ -1,17 +1,29 @@
 import fetch from "node-fetch";
 
+const COIN_API_URL =
+  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false";
+
+let cache = [];
+
+// Fetch crypto data safely
 async function fetchCryptoData() {
   try {
-    const res = await fetch(
-      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false"
-    );
-    const data = await res.json();
+    const res = await fetch(COIN_API_URL);
 
-    if (!Array.isArray(data)) {
-      console.error("Unexpected API response:", data);
-      return [];
+    if (!res.ok) {
+      console.error("CoinGecko API returned error status:", res.status, res.statusText);
+      return cache; // keep previous cache
     }
 
+    const data = await res.json();
+
+    // Check if data is actually an array
+    if (!Array.isArray(data)) {
+      console.error("CoinGecko returned non-array data:", data);
+      return cache; // keep previous cache
+    }
+
+    // Map only if it's an array
     return data.map((coin) => ({
       id: coin.id,
       name: coin.name,
@@ -24,20 +36,27 @@ async function fetchCryptoData() {
       last_updated: coin.last_updated,
     }));
   } catch (err) {
-    console.error("Error fetching data:", err);
-    return [];
+    console.error("Error fetching crypto data:", err);
+    return cache; // keep previous cache
   }
 }
 
-let cache = [];
+// Refresh cache safely
 async function refreshData() {
-  cache = await fetchCryptoData();
-  console.log("Data updated at", new Date().toLocaleTimeString());
+  const newData = await fetchCryptoData();
+  if (Array.isArray(newData) && newData.length > 0) {
+    cache = newData;
+    console.log("Crypto data updated at", new Date().toLocaleTimeString());
+  } else {
+    console.log("Using previous cache, update skipped at", new Date().toLocaleTimeString());
+  }
 }
 
-setInterval(refreshData, 20000); // refresh every 20s
+// Initial fetch + auto-refresh every 20s
 refreshData();
+setInterval(refreshData, 20000);
 
+// Express route
 export const getCryptoData = (req, res) => {
   res.json(cache);
 };

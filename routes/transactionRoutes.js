@@ -11,12 +11,13 @@ router.post("/create", authMiddleware, async (req, res) => {
       transferType,   // "crypto" or "bank"
       walletType,     // e.g., "BTC", "ETH" (only for crypto)
       walletAddress,  // only for crypto
+      name,
       accNo,          // only for bank
       IFSC,           // only for bank
       amount,
+      panNumber,
       email,
       phoneNumber,
-      otp,
     } = req.body;
     const { userId } = req.user;
 
@@ -27,13 +28,13 @@ router.post("/create", authMiddleware, async (req, res) => {
 
     const user = await userModel.findById(userId);
 
-    if(otp != user.verifyOtp){
-      return res.status(400).json({ success: false, message: "Invalid OTP" });
-    }
+    // if(otp != user.verifyOtp){
+    //   return res.status(400).json({ success: false, message: "Invalid OTP" });
+    // }
 
-    if (user.verifyOtpExpireAt < Date.now()) {
-      return res.status(400).json({ success: false, message: 'OTP Expired' });
-    }
+    // if (user.verifyOtpExpireAt < Date.now()) {
+    //   return res.status(400).json({ success: false, message: 'OTP Expired' });
+    // }
 
     if(email != user.email){
       return res.status(400).json({ success: false, message: "Invalid Email" });
@@ -46,7 +47,6 @@ router.post("/create", authMiddleware, async (req, res) => {
       amount,
       email,
       phoneNumber,
-      otp,
       transactionStatus: "pending",
     };
 
@@ -60,13 +60,15 @@ router.post("/create", authMiddleware, async (req, res) => {
       transactionData.walletType = walletType;
       transactionData.walletAddress = walletAddress;
     } else if (transferType === "bank") {
-      if (!accNo || !IFSC) {
+      if (!name || !accNo || !IFSC) {
         return res
           .status(400)
-          .json({ success: false, message: "Account number and IFSC are required for bank transfers" });
+          .json({ success: false, message: "Name, account number and IFSC are required for bank transfers" });
       }
       transactionData.accNo = accNo;
       transactionData.IFSC = IFSC;
+      transactionData.name = name;
+      transactionData.panNumber = panNumber;
     } else {
       return res.status(400).json({ success: false, message: "Invalid transfer type" });
     }

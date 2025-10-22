@@ -19,6 +19,14 @@ const transactionSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+    name: {
+        type: String,
+        default: '',
+    },
+    panNumber: {
+        type: String,
+        default: '',
+    },
     accNo: {
         type: String,
         default: '',

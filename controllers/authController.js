@@ -49,6 +49,10 @@ export const login = async (req, res) => {
             return res.status(401).json({success: false, message: 'Invalid email'});
         }
 
+        if (!user.isAccountVerified){
+            return res.status(401).json({success: false, message: 'Account not Verified'});
+        }
+
         // const isMatch = await bcrypt.compare(password, user.password);
 
         if (password != user.password) {

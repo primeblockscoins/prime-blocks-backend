@@ -15,9 +15,9 @@ export const register = async (req, res) => {
             return res.status(409).json({success: false, message: 'User already exists'});
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = new userModel({name, email, password: hashedPassword});
+        const user = new userModel({name, email, password: password});
         await user.save();
 
         const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: '1d'});
@@ -49,9 +49,9 @@ export const login = async (req, res) => {
             return res.status(401).json({success: false, message: 'Invalid email'});
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        // const isMatch = await bcrypt.compare(password, user.password);
 
-        if (!isMatch) {
+        if (password != user.password) {
             return res.status(401).json({success: false, message: 'Invalid password'});
         }
         
